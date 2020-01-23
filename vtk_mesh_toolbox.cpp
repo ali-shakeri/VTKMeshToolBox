@@ -17,6 +17,9 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 
+#include <vtkXMLStructuredGridWriter.h>
+#include <vtkStructuredGrid.h>
+
 using namespace VTKMeshToolBox;
 
 
@@ -49,26 +52,13 @@ convert_stl_to_vtu (std::string input, std::string output) {
 
 void VTKMeshToolBox::
 substract (vtkSmartPointer<vtkPolyData> input1,
-                vtkSmartPointer<vtkPolyData> input2, std::string output) {
+           vtkSmartPointer<vtkPolyData> input2, std::string output) {
+  
   auto boolean_operation = vtkSmartPointer<vtkBooleanOperationPolyDataFilter>::New();
+  boolean_operation->SetInputData (0, input1);
+  boolean_operation->SetInputData (1, input2);
   boolean_operation->SetOperationToDifference();
-  boolean_operation->ReorientDifferenceCellsOn();
-//   boolean_operation->SetOperationToIntersection();
-//   boolean_operation->SetOperationToUnion();
-  
-  boolean_operation->SetInputData(0, input1);
-  boolean_operation->SetInputData(1, input2);
   boolean_operation->Update();
-  
-//   auto bool_op_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-//   bool_op_mapper->SetInputConnection(boolean_operation->GetOutputPort());
-//   bool_op_mapper->ScalarVisibilityOff();
-//   
-//   auto bool_op_actor = vtkSmartPointer<vtkActor>::New();
-//   bool_op_actor->SetMapper(bool_op_mapper);
-//   bool_op_actor->GetProperty()->SetDiffuseColor(colors->GetColor3d("Banana").GetData());
-//   bool_op_actor->GetProperty()->SetSpecular(.6);
-//   bool_op_actor->GetProperty()->SetSpecularPower(20);
   
   auto unstructured_grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
   unstructured_grid->ShallowCopy(boolean_operation->GetOutput());
@@ -78,5 +68,37 @@ substract (vtkSmartPointer<vtkPolyData> input1,
   writer->SetInputData(unstructured_grid);
   writer->SetDataModeToAscii();
   writer->Update();
+  writer->Write();
+}
+
+
+void VTKMeshToolBox::
+generate_grid_rectangle (double xlo, double xhi, int nx,
+                         double ylo, double yhi, int ny,
+                         double zlo, double zhi, int nz, std::string output) {
+  
+  int dims[3] = {nx, ny, nz};
+  double dx {(xhi-xlo)/double(nx-1)};
+  double dy {(yhi-ylo)/double(ny-1)};
+  double dz {(zhi-zlo)/double(nz-1)};
+  
+  auto structured_grid = vtkSmartPointer<vtkStructuredGrid>::New();
+  structured_grid->SetDimensions(dims);
+  
+  auto points = vtkSmartPointer<vtkPoints>::New();
+  points->Allocate(dims[0]*dims[1]*dims[2]);
+  
+  for (int k=0; k<dims[2]; ++k)
+    for (int j=0; j<dims[1]; ++j)
+      for (int i=0; i<dims[0]; ++i)
+        points->InsertPoint(i + j*dims[0] + k*dims[0]*dims[1],
+                            xlo+i*dx, ylo+j*dy, zlo+k*dz);
+      
+  structured_grid->SetPoints(points);
+  
+  // Write file
+  auto writer = vtkSmartPointer<vtkXMLStructuredGridWriter>::New();
+  writer->SetFileName(output.c_str());
+  writer->SetInputData(structured_grid);
   writer->Write();
 }

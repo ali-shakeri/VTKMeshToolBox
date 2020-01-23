@@ -21,6 +21,11 @@ namespace VTKMeshToolBox {
     
   void substract (vtkSmartPointer<vtkPolyData> input1,
                   vtkSmartPointer<vtkPolyData> input2, std::string output);
+  
+  void generate_grid_rectangle (double xlo, double xhi, int nx,
+                                double ylo, double yhi, int ny,
+                                double zlo, double zhi, int nz,
+                                std::string output);
 }
 
 #endif
