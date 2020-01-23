@@ -1,3 +1,0 @@
-/nishome/ali/Programming/VTKMeshToolBox/build/CMakeFiles/rebuild_cache.dir
-/nishome/ali/Programming/VTKMeshToolBox/build/CMakeFiles/VTKMeshToolBox.dir
-/nishome/ali/Programming/VTKMeshToolBox/build/CMakeFiles/edit_cache.dir
